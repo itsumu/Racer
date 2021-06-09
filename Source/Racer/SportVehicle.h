@@ -58,6 +58,14 @@ public:
 	UPROPERTY(Category = Sound, EditAnywhere)
 	UAudioComponent* EngineSoundComponent;
 
+	UFUNCTION()
+		void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex,
+			bool bFromSweep,
+			const FHitResult& SweepResult);
+
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float Delta) override;

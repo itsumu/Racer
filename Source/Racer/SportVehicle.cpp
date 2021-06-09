@@ -5,7 +5,6 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -18,7 +17,9 @@
 #include "WheeledVehicleMovementComponent4W.h"
 
 #include "BackWheel.h"
+#include "Checkpoint.h"
 #include "FrontWheel.h"
+#include "RacerPlayerController.h"
 
 const float ASportVehicle::MaxAudioRPM = 2500.0f;
 const FName ASportVehicle::EngineAudioParamName("RPM");
@@ -197,6 +198,9 @@ void ASportVehicle::BeginPlay()
 
 	// Play engine sound
 	EngineSoundComponent->Play();
+
+	// Overlap events
+	GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ASportVehicle::BeginOverlap);
 }
 
 void ASportVehicle::Tick(float Delta)
@@ -208,4 +212,15 @@ void ASportVehicle::Tick(float Delta)
 
 	// Update engine sound according to Engine RPM
 	UpdateEngineSound();
+}
+
+void ASportVehicle::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, OtherActor->GetName());
+	if (OtherActor->GetClass()->IsChildOf(ACheckpoint::StaticClass()))
+	{
+		ARacerPlayerController* PlayerController = Cast<ARacerPlayerController>(GetController());
+		PlayerController->UpdateCheckpoint();
+	}
 }
