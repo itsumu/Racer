@@ -13,7 +13,7 @@ ACheckpoint::ACheckpoint()
 
 	Collider = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
     SetRootComponent(Collider);
-	Collider->SetWorldScale3D(FVector(10.0f, 10.0f, 10.0f));
+	Collider->SetWorldScale3D(FVector(15.0f, 15.0f, 15.0f));
 	Collider->SetVisibility(true);
 	Collider->bHiddenInGame = false;
 	Collider->SetGenerateOverlapEvents(false);

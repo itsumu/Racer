@@ -49,9 +49,9 @@ void ARacerPlayerController::BeginPlay()
 		//CheckpointMiddleLocation = FVector(-8150.0f, -4490.0f, 260.0f);
 		//CheckpointEndLocation = FVector(-7150.0f, -4490.0f, 260.0f);
 
-		CheckpointStartLocation = FVector(-9660.0f, -4450.0f, 50.0f);
-		CheckpointMiddleLocation = FVector(-4630.0f, -1740.0f, 50.0f);
-		CheckpointEndLocation = FVector(-9900.0f, -4450.0f, 50.0f);
+		CheckpointStartLocation = FVector(-1290.0f, -5000.0f, 0.0f);
+		CheckpointMiddleLocation = FVector(110.0f, 5000.0f, 500.0f);
+		CheckpointEndLocation = FVector(-1510.0f, -5000.0f, 0.0f);
 		Rotation = FRotator(0.0f, 0.0f, 0.0f);
 	}
 	else if (MapName.Find(TEXT("SpaceTrack")) != -1)

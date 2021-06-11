@@ -58,17 +58,25 @@ public:
 	UPROPERTY(Category = Sound, EditAnywhere)
 	UAudioComponent* EngineSoundComponent;
 
+	// Factor which is multiplied by mass to form final impulse value
+	UPROPERTY(Category = Boost, EditAnywhere)
+	float BoostFactor = 20.0f;
+
+	// Max boost time in seconds
+	UPROPERTY(Category = Boost, EditAnywhere)
+	float MaxBoostTime = 0.25;
+	
 	UFUNCTION()
-		void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
-			AActor* OtherActor,
-			UPrimitiveComponent* OtherComp,
-			int32 OtherBodyIndex,
-			bool bFromSweep,
-			const FHitResult& SweepResult);
+	void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
 
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
-	virtual void Tick(float Delta) override;
+	virtual void Tick(float DeltaTime) override;
 
 	ASportVehicle();
 	void MoveForward(float Value);
@@ -81,7 +89,9 @@ private:
 	static const FName EngineAudioParamName;
 
 	float DampingRate = 0.0f;
-
+	bool bIsBoosted = false;
+	float PreBoostTime = 0.0f;
+	float BoostTime = 0.0f;
 	void DampWheels(float Rate);
 	void CheckCurrentGround();
 	void UpdateEngineSound();

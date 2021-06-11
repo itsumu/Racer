@@ -114,7 +114,7 @@ void ASportVehicle::MoveRight(float Value)
 
 void ASportVehicle::PressBrake()
 {
-	Vehicle4W->SetHandbrakeInput(true);
+	// Vehicle4W->SetHandbrakeInput(true);
 	Vehicle4W->Wheels[2]->TireConfig->SetFrictionScale(DriftFrictionScale);
 	Vehicle4W->Wheels[3]->TireConfig->SetFrictionScale(DriftFrictionScale);
 	LeftTrailEffect->Activate(true);
@@ -123,11 +123,13 @@ void ASportVehicle::PressBrake()
 
 void ASportVehicle::ReleaseBrake()
 {
-	Vehicle4W->SetHandbrakeInput(false);
+	// Vehicle4W->SetHandbrakeInput(false);
 	Vehicle4W->Wheels[2]->TireConfig->SetFrictionScale(DefaultFrictionScale);
 	Vehicle4W->Wheels[3]->TireConfig->SetFrictionScale(DefaultFrictionScale);
 	LeftTrailEffect->Deactivate();
 	RightTrailEffect->Deactivate();
+
+	bIsBoosted = true;
 }
 
 void ASportVehicle::DampWheels(float Rate)
@@ -200,18 +202,41 @@ void ASportVehicle::BeginPlay()
 	EngineSoundComponent->Play();
 
 	// Overlap events
+		// Checkpoint check
 	GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ASportVehicle::BeginOverlap);
 }
 
-void ASportVehicle::Tick(float Delta)
+void ASportVehicle::Tick(float DeltaTime)
 {
-	Super::Tick(Delta);
+	Super::Tick(DeltaTime);
 
 	// Check the ground material & Decide the damping rate
 	CheckCurrentGround();
 
 	// Update engine sound according to Engine RPM
 	UpdateEngineSound();
+
+	// Speed boost
+	if (bIsBoosted)
+	{
+		if (PreBoostTime <= 0.0f)
+		{
+			PreBoostTime += DeltaTime;
+		} else
+		{
+			FVector Impulse = GetActorForwardVector() * Vehicle4W->Mass * BoostFactor;
+
+			GetMesh()->AddImpulseAtLocation(Impulse, GetActorTransform().TransformPosition(FVector(0.0f, 0.0f, 30.0f)));
+			// GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, TEXT("Boost!"));
+			BoostTime += DeltaTime;
+		}
+	}
+	if (BoostTime >= MaxBoostTime)
+	{
+		PreBoostTime = 0.0f;
+		BoostTime = 0.0f;
+		bIsBoosted = false;
+	}
 }
 
 void ASportVehicle::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
