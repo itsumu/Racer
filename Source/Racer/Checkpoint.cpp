@@ -12,8 +12,8 @@ ACheckpoint::ACheckpoint()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Collider = CreateDefaultSubobject<UBoxComponent>(TEXT("Collider"));
+    SetRootComponent(Collider);
 	Collider->SetWorldScale3D(FVector(10.0f, 10.0f, 10.0f));
-	Collider->SetupAttachment(RootComponent);
 	Collider->SetVisibility(true);
 	Collider->bHiddenInGame = false;
 	Collider->SetGenerateOverlapEvents(false);

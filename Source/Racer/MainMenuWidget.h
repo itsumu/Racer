@@ -4,25 +4,33 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "GameCompleteWidget.generated.h"
+#include "MainMenuWidget.generated.h"
 
 UCLASS()
-class RACER_API UGameCompleteWidget : public UUserWidget
+class RACER_API UMainMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 public:
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* TextTimeRecord;
+	UButton* ButtonEasy;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* ButtonPlayAgain;
+	UButton* ButtonMedium;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ButtonHard;
 
 	UFUNCTION()
-	void OnPlayAgainButtonPressed();
-	
+	void OnEasyButtonPressed();
+
+	UFUNCTION()
+	void OnMediumButtonPressed();
+
+	UFUNCTION()
+	void OnHardButtonPressed();
+
 protected:
 	virtual bool Initialize() override;
 };

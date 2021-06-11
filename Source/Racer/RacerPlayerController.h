@@ -8,6 +8,7 @@
 
 class ACheckpoint;
 class UGameCompleteWidget;
+class UGameOverWidget;
 class UUserWidget;
 
 UCLASS()
@@ -21,16 +22,25 @@ class RACER_API ARacerPlayerController : public APlayerController
 	UPROPERTY()
 	UGameCompleteWidget* GameCompleteWidget;
 
+	UPROPERTY()
+	UGameOverWidget* GameOverWidget;
+
 public:
 	TSubclassOf<class UUserWidget> GameCompleteWidgetBPClass;
+	TSubclassOf<class UUserWidget> GameOverWidgetBPClass;
 
 	ARacerPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float Delta) override;
+	virtual void SetupInputComponent() override;
 	void UpdateCheckpoint();
 	void CompleteGame();
+	void TerminateGame();
 	void RestartGame();
+	void Revive();
+
 private:
 	FDateTime GameStartTime;
 	int32 NextCheckpoint;
+	bool bVehicleIsRunning;
 };

@@ -10,5 +10,5 @@ ARacerGameMode::ARacerGameMode()
 {
 	PlayerControllerClass = ARacerPlayerController::StaticClass();
 	DefaultPawnClass = ASportVehicle::StaticClass();
-	HUDClass = ARacerHud::StaticClass();
+	//HUDClass = ARacerHud::StaticClass();
 }
