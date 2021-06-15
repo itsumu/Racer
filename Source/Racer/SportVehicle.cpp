@@ -78,14 +78,12 @@ ASportVehicle::ASportVehicle()
 	LeftTrailEffect->SetRelativeLocation(FVector(-40.0f, -32.0f, 0.0f));
 	LeftTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
 	LeftTrailEffect->SetupAttachment(RootComponent);
-	LeftTrailEffect->SetAutoActivate(false);
 
 	RightTrailEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightTrailEffect"));
 	RightTrailEffect->SetTemplate(TrailEffect.Object);
 	RightTrailEffect->SetRelativeLocation(FVector(-40.0f, 32.0f, 0.0f));
 	RightTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
 	RightTrailEffect->SetupAttachment(RootComponent);
-	RightTrailEffect->SetAutoActivate(false);
 
 		// Boost
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> BoostVFX(
@@ -148,8 +146,8 @@ void ASportVehicle::PressBrake()
 	if (Vehicle4W->GetForwardSpeed() * 0.036f > MinDriftSpeed)
 	{
 		bIsSkidding = true;
-		LeftTrailEffect->Activate(true);
-		RightTrailEffect->Activate(true);
+		LeftTrailEffect->ActivateSystem();
+		RightTrailEffect->ActivateSystem();
 		SkidSoundComponent->Play();
 	}
 }
@@ -179,9 +177,10 @@ void ASportVehicle::DampWheels(float Rate)
 
 void ASportVehicle::CheckCurrentGround()
 {
-	FVector RayStart = GetActorLocation() + FVector(0.0f, 0.0f, 1.0f); //todo: Calculate in location space, then transform to world space
+	FVector RayStart = GetActorTransform().TransformPosition(FVector(0.0f, 0.0f, 10.0f));
 	FVector RayEnd = GetActorLocation() - GetActorUpVector() * 100.0f;
 	TArray< AActor* > ActorsToIgnore;
+	ActorsToIgnore.Add(this);
 	FHitResult OutHit;
 
 	UKismetSystemLibrary::LineTraceSingle(
@@ -191,10 +190,10 @@ void ASportVehicle::CheckCurrentGround()
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		ActorsToIgnore,
-		//EDrawDebugTrace::ForOneFrame,
+		// EDrawDebugTrace::ForOneFrame,
 		EDrawDebugTrace::None,
 		OutHit,
-		true,
+		false,
 		FLinearColor::Red,
 		FLinearColor::Green,
 		0.0f);
@@ -218,12 +217,17 @@ void ASportVehicle::CheckCurrentGround()
 			DampWheels(0.0f);
 		}
 	}
+	else
+	{ // In air, adjust angular velocity to balance the vehicle
+		Cast<UPrimitiveComponent>(Vehicle4W->UpdatedComponent)->SetPhysicsAngularVelocityInDegrees(
+		FVector(0, 0.1f, 0));
+	}
 }
 
 void ASportVehicle::DisableSlideFX()
 {
-	LeftTrailEffect->Deactivate();
-	RightTrailEffect->Deactivate();
+	LeftTrailEffect->DeactivateSystem();
+	RightTrailEffect->DeactivateSystem();
 	SkidSoundComponent->Stop();
 }
 
@@ -260,7 +264,9 @@ void ASportVehicle::BeginPlay()
 
 	// Particles
 	BoostEffect->DeactivateSystem();
-
+	LeftTrailEffect->DeactivateSystem();
+	RightTrailEffect->DeactivateSystem();
+	
 	// Debugging area
 	// FVector Origin;
 	// FVector Extent;
@@ -291,9 +297,8 @@ void ASportVehicle::Tick(float DeltaTime)
 		else
 		{
 			FVector Impulse = GetActorForwardVector() * Vehicle4W->Mass * BoostFactor;
-
-			GetMesh()->AddImpulseAtLocation(Impulse, GetActorTransform().TransformPosition(FVector(0.0f, 0.0f, 30.0f)));
-			// GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, TEXT("Boost!"));
+			FVector ImpulsePosition = GetActorTransform().TransformPosition(FVector(0.0f, 0.0f, 30.0f));
+			GetMesh()->AddImpulseAtLocation(Impulse, ImpulsePosition);
 			BoostTime += DeltaTime;
 		}
 	}
@@ -315,6 +320,8 @@ void ASportVehicle::Tick(float DeltaTime)
 	}
 
 	// Debugging area
+	// FVector AngularVelocity = GetActorTransform().Transform;
+	
 	// GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Blue, FString::Printf(TEXT("%f"), Vehicle4W->GetForwardSpeed()));
 }
 
