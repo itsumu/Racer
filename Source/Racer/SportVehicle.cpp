@@ -9,9 +9,11 @@
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Math/BoxSphereBounds.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Sound/SoundCue.h"
+#include "Sound/SoundWave.h"
 #include "TireConfig.h"
 #include "UObject/ConstructorHelpers.h"
 #include "WheeledVehicleMovementComponent4W.h"
@@ -68,27 +70,51 @@ ASportVehicle::ASportVehicle()
 
 	Vehicle4W->bDeprecatedSpringOffsetMode = true;
 
-	// Wheel trail effects
+	// Visual effects
+		// Wheel trails
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> TrailEffect(TEXT("/Game/VFX/Vehicle_Trail.Vehicle_Trail"));
 	LeftTrailEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LeftTrailEffect"));
+	LeftTrailEffect->SetTemplate(TrailEffect.Object);
 	LeftTrailEffect->SetRelativeLocation(FVector(-40.0f, -32.0f, 0.0f));
 	LeftTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
-	LeftTrailEffect->SetTemplate(TrailEffect.Object);
 	LeftTrailEffect->SetupAttachment(RootComponent);
 	LeftTrailEffect->SetAutoActivate(false);
 
 	RightTrailEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightTrailEffect"));
+	RightTrailEffect->SetTemplate(TrailEffect.Object);
 	RightTrailEffect->SetRelativeLocation(FVector(-40.0f, 32.0f, 0.0f));
 	RightTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
-	RightTrailEffect->SetTemplate(TrailEffect.Object);
 	RightTrailEffect->SetupAttachment(RootComponent);
 	RightTrailEffect->SetAutoActivate(false);
 
-	// Engine sound effects
-	static ConstructorHelpers::FObjectFinder<USoundCue> SoundCue(TEXT("/Game/Sounds/Engine_Loop_Cue.Engine_Loop_Cue"));
+		// Boost
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> BoostVFX(
+		TEXT("/Game/StarterContent/Particles/P_Explosion.P_Explosion"));
+	BoostEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BoostVisualEffect"));
+	BoostEffect->SetTemplate(BoostVFX.Object);
+	BoostEffect->SetRelativeLocation(FVector(-80.0f, 0.0f, 0.0f));
+	BoostEffect->SetupAttachment(RootComponent);
+	
+	// Sound effects
+		// Engine 
+	static ConstructorHelpers::FObjectFinder<USoundCue> EngineSoundCue(
+		TEXT("/Game/Sounds/Engine_Loop_Cue.Engine_Loop_Cue"));
 	EngineSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineSound"));
-	EngineSoundComponent->SetSound(SoundCue.Object);
+	EngineSoundComponent->SetSound(EngineSoundCue.Object);
 	EngineSoundComponent->SetupAttachment(RootComponent);
+
+		// Tire skid
+	static ConstructorHelpers::FObjectFinder<USoundWave> SkidSoundWave(TEXT("/Game/Sounds/tires_skid.tires_skid"));
+	SkidSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SkidSound"));
+	SkidSoundComponent->SetSound(SkidSoundWave.Object);
+	SkidSoundComponent->SetupAttachment(RootComponent);
+
+		// Speed boost
+	static ConstructorHelpers::FObjectFinder<USoundCue> BoostSoundCue(
+		TEXT("/Game/StarterContent/Audio/Explosion_Cue.Explosion_Cue"));
+	BoostSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BoostSound"));
+	BoostSoundComponent->SetSound(BoostSoundCue.Object);
+	BoostSoundComponent->SetupAttachment(RootComponent);
 }
 
 void ASportVehicle::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -114,21 +140,31 @@ void ASportVehicle::MoveRight(float Value)
 
 void ASportVehicle::PressBrake()
 {
+	bIsPressingBrake = true;
+	
 	// Vehicle4W->SetHandbrakeInput(true);
 	Vehicle4W->Wheels[2]->TireConfig->SetFrictionScale(DriftFrictionScale);
 	Vehicle4W->Wheels[3]->TireConfig->SetFrictionScale(DriftFrictionScale);
-	LeftTrailEffect->Activate(true);
-	RightTrailEffect->Activate(true);
+	if (Vehicle4W->GetForwardSpeed() * 0.036f > MinDriftSpeed)
+	{
+		bIsSkidding = true;
+		LeftTrailEffect->Activate(true);
+		RightTrailEffect->Activate(true);
+		SkidSoundComponent->Play();
+	}
 }
 
 void ASportVehicle::ReleaseBrake()
 {
+	bIsPressingBrake = false;
+	bIsSkidding = false;
+
 	// Vehicle4W->SetHandbrakeInput(false);
 	Vehicle4W->Wheels[2]->TireConfig->SetFrictionScale(DefaultFrictionScale);
 	Vehicle4W->Wheels[3]->TireConfig->SetFrictionScale(DefaultFrictionScale);
-	LeftTrailEffect->Deactivate();
-	RightTrailEffect->Deactivate();
+	DisableSlideFX();
 
+	EnableBoostFX();
 	bIsBoosted = true;
 }
 
@@ -184,6 +220,19 @@ void ASportVehicle::CheckCurrentGround()
 	}
 }
 
+void ASportVehicle::DisableSlideFX()
+{
+	LeftTrailEffect->Deactivate();
+	RightTrailEffect->Deactivate();
+	SkidSoundComponent->Stop();
+}
+
+void ASportVehicle::EnableBoostFX()
+{
+	BoostSoundComponent->Play();
+	BoostEffect->ActivateSystem();
+}
+
 void ASportVehicle::UpdateEngineSound()
 {
 	// Engine RPM to sound parameters
@@ -204,6 +253,22 @@ void ASportVehicle::BeginPlay()
 	// Overlap events
 		// Checkpoint check
 	GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ASportVehicle::BeginOverlap);
+
+	// Audios
+	BoostSoundComponent->Stop();
+	SkidSoundComponent->Stop();
+
+	// Particles
+	BoostEffect->DeactivateSystem();
+
+	// Debugging area
+	// FVector Origin;
+	// FVector Extent;
+	// float SphereRadius;
+	//
+	// UKismetSystemLibrary::GetComponentBounds(GetMesh(), Origin, Extent, SphereRadius);
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Origin.ToString());
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, Extent.ToString());	
 }
 
 void ASportVehicle::Tick(float DeltaTime)
@@ -222,7 +287,8 @@ void ASportVehicle::Tick(float DeltaTime)
 		if (PreBoostTime <= 0.0f)
 		{
 			PreBoostTime += DeltaTime;
-		} else
+		}
+		else
 		{
 			FVector Impulse = GetActorForwardVector() * Vehicle4W->Mass * BoostFactor;
 
@@ -237,6 +303,19 @@ void ASportVehicle::Tick(float DeltaTime)
 		BoostTime = 0.0f;
 		bIsBoosted = false;
 	}
+
+	// Slide FX update
+	if (bIsPressingBrake && bIsSkidding)
+	{
+		if (Vehicle4W->GetForwardSpeed() * 0.036f < MinDriftSpeed)
+		{
+			bIsSkidding = false;
+			DisableSlideFX();
+		}
+	}
+
+	// Debugging area
+	// GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Blue, FString::Printf(TEXT("%f"), Vehicle4W->GetForwardSpeed()));
 }
 
 void ASportVehicle::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

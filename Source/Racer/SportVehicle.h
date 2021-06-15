@@ -36,7 +36,7 @@ public:
 	float DefaultFrictionScale;
 		// Friction scale for drifting purpose
 	UPROPERTY(Category = WheelFritionScale, EditAnywhere)
-	float DriftFrictionScale = 0.5f;
+	float DriftFrictionScale = 1.85f;
 
 	// 4 wheel vehicle movement component
 	UPROPERTY()
@@ -52,19 +52,32 @@ public:
 	UPROPERTY(Category = ParticleEffects, EditAnywhere)
 	UParticleSystemComponent* RightTrailEffect;
 
+	UPROPERTY(Category = ParticleEffects, EditAnywhere)
+	UParticleSystemComponent* BoostEffect;
+	
 	UPROPERTY()
 	UCapsuleComponent* Collider;
 
 	UPROPERTY(Category = Sound, EditAnywhere)
 	UAudioComponent* EngineSoundComponent;
 
+	UPROPERTY(Category = Sound, EditAnywhere)
+	UAudioComponent* SkidSoundComponent;
+
+	UPROPERTY(Category = Sound, EditAnywhere)
+	UAudioComponent* BoostSoundComponent;
+	
 	// Factor which is multiplied by mass to form final impulse value
 	UPROPERTY(Category = Boost, EditAnywhere)
 	float BoostFactor = 20.0f;
 
 	// Max boost time in seconds
 	UPROPERTY(Category = Boost, EditAnywhere)
-	float MaxBoostTime = 0.25;
+	float MaxBoostTime = 0.25f;
+
+	// Min speed to trigger or stop drifting
+	UPROPERTY(Category = Drift, EditAnywhere)
+	float MinDriftSpeed = 5.0f;
 	
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -90,9 +103,13 @@ private:
 
 	float DampingRate = 0.0f;
 	bool bIsBoosted = false;
+	bool bIsSkidding = false;
+	bool bIsPressingBrake = false;
 	float PreBoostTime = 0.0f;
 	float BoostTime = 0.0f;
-	void DampWheels(float Rate);
 	void CheckCurrentGround();
+	void DampWheels(float Rate);
+	void DisableSlideFX();
+	void EnableBoostFX();
 	void UpdateEngineSound();
 };
