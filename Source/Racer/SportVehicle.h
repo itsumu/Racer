@@ -6,8 +6,10 @@
 #include "WheeledVehicle.h"
 #include "SportVehicle.generated.h"
 
+// class PAPER2UPaperSpriteComponent;
 class UAudioComponent;
 class UCameraComponent;
+class UPaperSpriteComponent;
 class UParticleSystemComponent;
 class UPhysicalMaterial;
 class USpringArmComponent;
@@ -30,6 +32,10 @@ public:
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* ChaseCamera;
 
+	// Marker for minimap
+	UPROPERTY(Category = Sprite, EditAnywhere)
+	UPaperSpriteComponent* ArrowSpriteComponent;
+	
 	// Friction scale for back wheels
 		// Friction scale editable to override the default back tire friction
 	UPROPERTY(Category = WheelFritionScale, EditAnywhere)
@@ -59,14 +65,17 @@ public:
 	UCapsuleComponent* Collider;
 
 	UPROPERTY(Category = Sound, EditAnywhere)
+	UAudioComponent* BoostSoundComponent;
+	
+	UPROPERTY(Category = Sound, EditAnywhere)
 	UAudioComponent* EngineSoundComponent;
 
 	UPROPERTY(Category = Sound, EditAnywhere)
+	UAudioComponent* LandSoundComponent;
+	
+	UPROPERTY(Category = Sound, EditAnywhere)
 	UAudioComponent* SkidSoundComponent;
 
-	UPROPERTY(Category = Sound, EditAnywhere)
-	UAudioComponent* BoostSoundComponent;
-	
 	// Factor which is multiplied by mass to form final impulse value
 	UPROPERTY(Category = Boost, EditAnywhere)
 	float BoostFactor = 20.0f;
@@ -101,12 +110,14 @@ private:
 	static const float MaxAudioRPM;
 	static const FName EngineAudioParamName;
 
-	float DampingRate = 0.0f;
 	bool bIsBoosted = false;
-	bool bIsSkidding = false;
+	bool bIsInAir = false;
 	bool bIsPressingBrake = false;
-	float PreBoostTime = 0.0f;
+	bool bIsSkidding = false;
 	float BoostTime = 0.0f;
+	float DampingRate = 0.0f;
+	float PreBoostTime = 0.0f;
+	
 	void CheckCurrentGround();
 	void DampWheels(float Rate);
 	void DisableSlideFX();

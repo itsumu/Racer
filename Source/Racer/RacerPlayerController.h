@@ -25,10 +25,14 @@ class RACER_API ARacerPlayerController : public APlayerController
 	UPROPERTY()
 	UGameOverWidget* GameOverWidget;
 
+	UPROPERTY()
+	UUserWidget* MinimapWidget;
+
 public:
 	TSubclassOf<class UUserWidget> GameCompleteWidgetBPClass;
 	TSubclassOf<class UUserWidget> GameOverWidgetBPClass;
-
+	TSubclassOf<class UUserWidget> MinimapWidgetBPClass;
+	
 	ARacerPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float Delta) override;

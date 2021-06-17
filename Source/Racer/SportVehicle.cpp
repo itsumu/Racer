@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/InputComponent.h"
+#include "PaperSprite.h"
+#include "PaperSpriteComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -113,6 +115,23 @@ ASportVehicle::ASportVehicle()
 	BoostSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BoostSound"));
 	BoostSoundComponent->SetSound(BoostSoundCue.Object);
 	BoostSoundComponent->SetupAttachment(RootComponent);
+
+		// Land impact
+	static ConstructorHelpers::FObjectFinder<USoundWave> LandWave(TEXT("/Game/Sounds/Impact_Land.Impact_Land"));
+	LandSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("LandSound"));
+	LandSoundComponent->SetSound(LandWave.Object);
+	LandSoundComponent->SetupAttachment(RootComponent);
+
+	// Sprites
+	static ConstructorHelpers::FObjectFinder<UPaperSprite> ArrowSprite(
+		TEXT("/Game/Materials/Arrow_Sprite.Arrow_Sprite"));
+	ArrowSpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Arrow"));
+	ArrowSpriteComponent->SetSprite(ArrowSprite.Object);
+	ArrowSpriteComponent->SetWorldScale3D(FVector(20.0f, 20.0f, 20.0f));
+	ArrowSpriteComponent->SetRelativeRotation(FRotator::MakeFromEuler(FVector(-90.0f, 0.0f, -90.0f)));
+	ArrowSpriteComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 1000.0f));
+	ArrowSpriteComponent->SetOwnerNoSee(true);
+	ArrowSpriteComponent->SetupAttachment(RootComponent);
 }
 
 void ASportVehicle::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -200,27 +219,33 @@ void ASportVehicle::CheckCurrentGround()
 
 	if (OutHit.Actor != nullptr)
 	{
+		if (bIsInAir)
+		{
+			bIsInAir = false;
+			LandSoundComponent->Play();
+		}
 		if (OutHit.Actor->GetName() == TEXT("Floor"))
 		{
-			//if (GetName() == TEXT("Vehicle_Straight"))
-			//{
-				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("On floor"));
-			//}
+			// if (GetName() == TEXT("Vehicle_Straight"))
+			// {
+				// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("On floor"));
+			// }
 			DampWheels(FloorDampingRate);
 		}
 		else
 		{
-			//if (GetName() == TEXT("Vehicle_Straight"))
-			//{
-				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("On track"));
-			//}
+			// if (GetName() == TEXT("Vehicle_Straight"))
+			// {
+				// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("On track"));
+			// }
 			DampWheels(0.0f);
 		}
 	}
 	else
 	{ // In air, adjust angular velocity to balance the vehicle
+		bIsInAir = true;
 		Cast<UPrimitiveComponent>(Vehicle4W->UpdatedComponent)->SetPhysicsAngularVelocityInDegrees(
-		FVector(0, 0.1f, 0));
+		FVector(0.0f, 0.0f, 0.0f));
 	}
 }
 
@@ -261,7 +286,8 @@ void ASportVehicle::BeginPlay()
 	// Audios
 	BoostSoundComponent->Stop();
 	SkidSoundComponent->Stop();
-
+	LandSoundComponent->Stop();
+	
 	// Particles
 	BoostEffect->DeactivateSystem();
 	LeftTrailEffect->DeactivateSystem();

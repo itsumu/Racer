@@ -17,7 +17,7 @@ ARacerPlayerController::ARacerPlayerController()
 {
 	bAutoManageActiveCameraTarget = true;
 
-	// Generate UI from assets
+	// UI
 	static ConstructorHelpers::FClassFinder<UUserWidget> GameWidgetBP(TEXT("/Game/UI/GameComplete"));
 	check(GameWidgetBP.Succeeded());
 	GameCompleteWidgetBPClass = GameWidgetBP.Class;
@@ -25,6 +25,10 @@ ARacerPlayerController::ARacerPlayerController()
 	static ConstructorHelpers::FClassFinder<UUserWidget> GameOverWidgetBP(TEXT("/Game/UI/GameOver"));
 	check(GameOverWidgetBP.Succeeded());
 	GameOverWidgetBPClass = GameOverWidgetBP.Class;
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> MinimapWidgetBP(TEXT("/Game/UI/Minimap"));
+	check(MinimapWidgetBP.Succeeded());
+	MinimapWidgetBPClass = MinimapWidgetBP.Class;
 }
 
 void ARacerPlayerController::BeginPlay()
@@ -56,9 +60,9 @@ void ARacerPlayerController::BeginPlay()
 	}
 	else if (MapName.Find(TEXT("SpaceTrack")) != -1)
 	{
-		CheckpointStartLocation = FVector(-9640.0f, -4750.0f, 1390.0f);
-		CheckpointMiddleLocation = FVector(-7530.0f, 970.0f, 860.0f);
-		CheckpointEndLocation = FVector(-9900.0f, -4750.0f, 1390.0f);
+		CheckpointStartLocation = FVector(-3100.0f, -4860.0f, 3000.0f);
+		CheckpointMiddleLocation = FVector(-1830.0f, 420.0f, 2800.0f);
+		CheckpointEndLocation = FVector(-3360.0f, -4860.0f, 3000.0f);
 		Rotation = FRotator(0.0f, 0.0f, 0.0f);
 	}
 	else
@@ -79,6 +83,8 @@ void ARacerPlayerController::BeginPlay()
 	// UI widgets
 	GameCompleteWidget = CreateWidget<UGameCompleteWidget>(this, GameCompleteWidgetBPClass);
 	GameOverWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetBPClass);
+	MinimapWidget = CreateWidget<UUserWidget>(this, MinimapWidgetBPClass);
+	MinimapWidget->AddToViewport();
 
 	// Pause flag
 	bVehicleIsRunning = true;
