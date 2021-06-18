@@ -9,6 +9,7 @@
 class ACheckpoint;
 class UGameCompleteWidget;
 class UGameOverWidget;
+class UHUDWidget;
 class UUserWidget;
 
 UCLASS()
@@ -26,22 +27,23 @@ class RACER_API ARacerPlayerController : public APlayerController
 	UGameOverWidget* GameOverWidget;
 
 	UPROPERTY()
-	UUserWidget* MinimapWidget;
+	UHUDWidget* HUDWidget;
 
 public:
 	TSubclassOf<class UUserWidget> GameCompleteWidgetBPClass;
 	TSubclassOf<class UUserWidget> GameOverWidgetBPClass;
-	TSubclassOf<class UUserWidget> MinimapWidgetBPClass;
+	TSubclassOf<class UUserWidget> HUDWidgetBPClass;
 	
 	ARacerPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float Delta) override;
 	virtual void SetupInputComponent() override;
-	void UpdateCheckpoint();
 	void CompleteGame();
 	void TerminateGame();
 	void RestartGame();
 	void Revive();
+	void UpdateCheckpoint();
+	void UpdateHUD();
 
 private:
 	FDateTime GameStartTime;

@@ -10,6 +10,7 @@
 #include "Checkpoint.h"
 #include "GameCompleteWidget.h"
 #include "GameOverWidget.h"
+#include "HUDWidget.h"
 #include "ReviveSpot.h"
 #include "SportVehicle.h"
 
@@ -26,9 +27,9 @@ ARacerPlayerController::ARacerPlayerController()
 	check(GameOverWidgetBP.Succeeded());
 	GameOverWidgetBPClass = GameOverWidgetBP.Class;
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> MinimapWidgetBP(TEXT("/Game/UI/Minimap"));
-	check(MinimapWidgetBP.Succeeded());
-	MinimapWidgetBPClass = MinimapWidgetBP.Class;
+	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidgetBP(TEXT("/Game/UI/HUD"));
+	check(HUDWidgetBP.Succeeded());
+	HUDWidgetBPClass = HUDWidgetBP.Class;
 }
 
 void ARacerPlayerController::BeginPlay()
@@ -83,8 +84,8 @@ void ARacerPlayerController::BeginPlay()
 	// UI widgets
 	GameCompleteWidget = CreateWidget<UGameCompleteWidget>(this, GameCompleteWidgetBPClass);
 	GameOverWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetBPClass);
-	MinimapWidget = CreateWidget<UUserWidget>(this, MinimapWidgetBPClass);
-	MinimapWidget->AddToViewport();
+	HUDWidget = CreateWidget<UHUDWidget>(this, HUDWidgetBPClass);
+	HUDWidget->AddToViewport();
 
 	// Pause flag
 	bVehicleIsRunning = true;
@@ -103,6 +104,8 @@ void ARacerPlayerController::Tick(float Delta)
 			TerminateGame();
 		}
 	}
+
+	UpdateHUD();
 }
 
 void ARacerPlayerController::SetupInputComponent()
@@ -110,18 +113,6 @@ void ARacerPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("Revive", IE_Pressed, this, &ARacerPlayerController::Revive);
-}
-
-void ARacerPlayerController::UpdateCheckpoint() 
-{
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("Checkpoint %d"), NextCheckpoint));
-	Checkpoints[NextCheckpoint]->Disable();
-	NextCheckpoint = (NextCheckpoint + 1) % Checkpoints.Num();
-	Checkpoints[NextCheckpoint]->Enable();
-	if (NextCheckpoint == 0)
-	{
-		CompleteGame();
-	}
 }
 
 void ARacerPlayerController::CompleteGame()
@@ -200,4 +191,37 @@ void ARacerPlayerController::Revive()
 
 	ASportVehicle* NewVehicle = GetWorld()->SpawnActor<ASportVehicle>(ASportVehicle::StaticClass(), ReviveTransform);
 	Possess(NewVehicle);
+}
+
+void ARacerPlayerController::UpdateCheckpoint() 
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("Checkpoint %d"), NextCheckpoint));
+	Checkpoints[NextCheckpoint]->Disable();
+	NextCheckpoint = (NextCheckpoint + 1) % Checkpoints.Num();
+	Checkpoints[NextCheckpoint]->Enable();
+	if (NextCheckpoint == 0)
+	{
+		CompleteGame();
+	}
+}
+
+void ARacerPlayerController::UpdateHUD()
+{
+	if (bVehicleIsRunning)
+	{
+		double GameTimeSpan = (FDateTime::Now() - GameStartTime).GetTotalMilliseconds();
+		int hour = static_cast<int>(GameTimeSpan / 3600000.0);
+		GameTimeSpan -= (hour * 3600000.0); 
+		int minute = static_cast<int>(GameTimeSpan / 60000.0);
+		GameTimeSpan -= (minute * 60000.0);
+		int second = static_cast<int>(GameTimeSpan / 1000.0);
+		GameTimeSpan -= (second * 1000.0);
+		int millisecond = static_cast<int>(GameTimeSpan);
+	
+		// HUDWidget->TextTime->SetText(FText::AsTimespan(FDateTime::Now() - GameStartTime));
+		HUDWidget->TextTime->SetText(
+			FText::FromString(FString::Printf(TEXT("%02d:%02d.%03d"), minute, second, millisecond)));
+		HUDWidget->TextVelocity->SetText(
+			FText::FromString(FString::Printf(TEXT("%d"), static_cast<int>(GetPawn()->GetVelocity().Size() * 0.036f))));
+	}
 }

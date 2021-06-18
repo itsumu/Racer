@@ -77,14 +77,16 @@ ASportVehicle::ASportVehicle()
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> TrailEffect(TEXT("/Game/VFX/Vehicle_Trail.Vehicle_Trail"));
 	LeftTrailEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LeftTrailEffect"));
 	LeftTrailEffect->SetTemplate(TrailEffect.Object);
-	LeftTrailEffect->SetRelativeLocation(FVector(-40.0f, -32.0f, 0.0f));
-	LeftTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
+	LeftTrailEffect->SetRelativeLocation(FVector(-50.0f, -35.0f, 1.0f));
+	// LeftTrailEffect->SetWorldRotation(FRotator::MakeFromEuler(FVector(-90.0f, 0.0f, 0.0f)));
+	LeftTrailEffect->SetWorldRotation(FRotator(0.0f, 0.0f, -90.0f));
 	LeftTrailEffect->SetupAttachment(RootComponent);
 
 	RightTrailEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightTrailEffect"));
 	RightTrailEffect->SetTemplate(TrailEffect.Object);
-	RightTrailEffect->SetRelativeLocation(FVector(-40.0f, 32.0f, 0.0f));
-	RightTrailEffect->SetWorldRotation(FRotator(0.0f, -90.0f, 0.0f));
+	RightTrailEffect->SetRelativeLocation(FVector(-50.0f, 35.0f, 1.0f));
+	// RightTrailEffect->SetWorldRotation(FRotator::MakeFromEuler(FVector(-90.0f, 0.0f, 0.0f)));
+	RightTrailEffect->SetWorldRotation(FRotator(0.0f, 0.0f, -90.0f));
 	RightTrailEffect->SetupAttachment(RootComponent);
 
 		// Boost
