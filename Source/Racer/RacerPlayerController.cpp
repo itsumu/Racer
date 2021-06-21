@@ -3,6 +3,8 @@
 
 #include "RacerPlayerController.h"
 
+#include "Engine/StaticMesh.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/DateTime.h"
@@ -48,6 +50,7 @@ void ARacerPlayerController::BeginPlay()
 	FVector CheckpointMiddleLocation;
 	FVector CheckpointEndLocation;
 	FRotator Rotation;
+	//todo: Parameterize hardcoded positions
 	if (MapName.Find(TEXT("LoopTrack")) != -1)
 	{
 		//CheckpointStartLocation = FVector(-9150.0f, -4490.0f, 260.0f);
@@ -81,6 +84,13 @@ void ARacerPlayerController::BeginPlay()
 	NextCheckpoint = 0;
 	Checkpoints[NextCheckpoint]->Enable();
 
+	// Record transform of the barriers 
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName(TEXT("Barrier")), Barriers);
+	for (AActor* Barrier : Barriers)
+	{
+		OriginalBarrierTransforms.Add(Barrier->GetActorTransform());
+	}
+	
 	// UI widgets
 	GameCompleteWidget = CreateWidget<UGameCompleteWidget>(this, GameCompleteWidgetBPClass);
 	GameOverWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetBPClass);
@@ -144,6 +154,18 @@ void ARacerPlayerController::TerminateGame()
 	bVehicleIsRunning = false;
 }
 
+void ARacerPlayerController::RespawnBarriers()
+{
+	for (int i = 0; i < Barriers.Num(); ++i)
+	{
+		Barriers[i]->SetActorTransform(OriginalBarrierTransforms[i]);
+	}
+	//todo: Parameterize hardcoded positions
+	// UStaticMesh* PileMesh = Cast<UStaticMesh>(
+	// StaticLoadObject(UStaticMesh::StaticClass(), NULL, TEXT("/Game/Geometry/Meshes/Pile.Pile")));
+	// AStaticMeshActor PileActor = 
+}
+
 void ARacerPlayerController::RestartGame()
 {
 	// Close UI
@@ -157,6 +179,9 @@ void ARacerPlayerController::RestartGame()
 
 	ASportVehicle* NewVehicle = GetWorld()->SpawnActor<ASportVehicle>(ASportVehicle::StaticClass(), PlayerStartTransform);
 	Possess(NewVehicle);
+
+	// Respawn barriers
+	RespawnBarriers();
 
 	// Reset game start time
 	GameStartTime = FDateTime::Now();
@@ -195,7 +220,7 @@ void ARacerPlayerController::Revive()
 
 void ARacerPlayerController::UpdateCheckpoint() 
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("Checkpoint %d"), NextCheckpoint));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("Checkpoint %d"), NextCheckpoint));
 	Checkpoints[NextCheckpoint]->Disable();
 	NextCheckpoint = (NextCheckpoint + 1) % Checkpoints.Num();
 	Checkpoints[NextCheckpoint]->Enable();

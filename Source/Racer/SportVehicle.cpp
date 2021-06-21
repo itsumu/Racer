@@ -23,6 +23,7 @@
 #include "BackWheel.h"
 #include "Checkpoint.h"
 #include "FrontWheel.h"
+#include "PhysXInterfaceWrapperCore.h"
 #include "RacerPlayerController.h"
 
 const float ASportVehicle::MaxAudioRPM = 2500.0f;
@@ -228,18 +229,12 @@ void ASportVehicle::CheckCurrentGround()
 		}
 		if (OutHit.Actor->GetName() == TEXT("Floor"))
 		{
-			// if (GetName() == TEXT("Vehicle_Straight"))
-			// {
-				// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("On floor"));
-			// }
+			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("On floor"));
 			DampWheels(FloorDampingRate);
 		}
 		else
 		{
-			// if (GetName() == TEXT("Vehicle_Straight"))
-			// {
-				// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("On track"));
-			// }
+			// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("On track"));
 			DampWheels(0.0f);
 		}
 	}
@@ -302,7 +297,7 @@ void ASportVehicle::BeginPlay()
 	//
 	// UKismetSystemLibrary::GetComponentBounds(GetMesh(), Origin, Extent, SphereRadius);
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Origin.ToString());
-	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, Extent.ToString());	
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, Extent.ToString());
 }
 
 void ASportVehicle::Tick(float DeltaTime)

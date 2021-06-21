@@ -29,6 +29,11 @@ class RACER_API ARacerPlayerController : public APlayerController
 	UPROPERTY()
 	UHUDWidget* HUDWidget;
 
+	UPROPERTY()
+	TArray<AActor*> Barriers;
+
+	UPROPERTY()
+	TArray<FTransform> OriginalBarrierTransforms;
 public:
 	TSubclassOf<class UUserWidget> GameCompleteWidgetBPClass;
 	TSubclassOf<class UUserWidget> GameOverWidgetBPClass;
@@ -40,6 +45,7 @@ public:
 	virtual void SetupInputComponent() override;
 	void CompleteGame();
 	void TerminateGame();
+	void RespawnBarriers();
 	void RestartGame();
 	void Revive();
 	void UpdateCheckpoint();
