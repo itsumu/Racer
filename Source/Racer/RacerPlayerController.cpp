@@ -115,7 +115,7 @@ void ARacerPlayerController::Tick(float Delta)
 		}
 	}
 
-	UpdateHUD();
+	UpdateHUD();	
 }
 
 void ARacerPlayerController::SetupInputComponent()
@@ -123,6 +123,7 @@ void ARacerPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("Revive", IE_Pressed, this, &ARacerPlayerController::Revive);
+	InputComponent->BindAction("Home", IE_Pressed, this, &ARacerPlayerController::ReturnToMainMenu);
 }
 
 void ARacerPlayerController::CompleteGame()
@@ -188,6 +189,11 @@ void ARacerPlayerController::RestartGame()
 
 	// Pause flag
 	bVehicleIsRunning = true;
+}
+
+void ARacerPlayerController::ReturnToMainMenu()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("MainMenu")));
 }
 
 void ARacerPlayerController::Revive()

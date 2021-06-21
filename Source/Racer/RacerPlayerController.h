@@ -44,10 +44,11 @@ public:
 	virtual void Tick(float Delta) override;
 	virtual void SetupInputComponent() override;
 	void CompleteGame();
-	void TerminateGame();
 	void RespawnBarriers();
 	void RestartGame();
+	void ReturnToMainMenu();
 	void Revive();
+	void TerminateGame();
 	void UpdateCheckpoint();
 	void UpdateHUD();
 

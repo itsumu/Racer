@@ -18,6 +18,7 @@ void AMenuPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bShowMouseCursor = true; 
 	SetInputMode(FInputModeUIOnly());
 	MainMenuWidget = CreateWidget<UMainMenuWidget>(this, MainMenuWidgetBPClass);
 	MainMenuWidget->AddToViewport();
